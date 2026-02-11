@@ -5,73 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat Rooms</title>
     <link rel="stylesheet" href="/libs/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/styles/index.css" />
     <script src="/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="/libs/jquery/jquery.min.js"></script>
-    <style>
-      @media (min-width: 992px) {
-        .main-content {
-          margin-left: 280px;
-        }
-        .offcanvas-lg {
-          position: fixed;
-          top: 0;
-          left: 0;
-          height: 100vh;
-          border-right: 1px solid #dee2e6;
-        }
-        .offcanvas-lg .offcanvas-header {
-          display: flex !important;
-        }
-        .offcanvas-lg .btn-close {
-          display: none;
-        }
-      }
-      .chat-container {
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 100px);
-      }
-      .messages-area {
-        flex: 1;
-        overflow-y: auto;
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        padding: 1rem;
-        background: white;
-        margin-bottom: 1rem;
-      }
-      .message {
-        margin-bottom: 0.75rem;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.375rem;
-        background: #f8f9fa;
-      }
-      .message .sender {
-        font-weight: bold;
-        color: #0d6efd;
-      }
-      .message .timestamp {
-        font-size: 0.75rem;
-        color: #6c757d;
-        margin-left: 0.5rem;
-      }
-      .message .text {
-        margin-top: 0.25rem;
-      }
-      .room-link {
-        cursor: pointer;
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem;
-        margin-bottom: 0.25rem;
-      }
-      .room-link:hover {
-        background: #e9ecef;
-      }
-      .room-link.active {
-        background: #0d6efd;
-        color: white;
-      }
-    </style>
   </head>
   <body class="bg-light">
     <div
@@ -83,18 +19,22 @@
       id="offcanvas"
       aria-labelledby="offcanvasLabel"
     >
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasLabel">Rooms</h5>
+      <div class="offcanvas-header flex-column align-items-start">
+        <div class="btn-group w-100 mb-2">
+          <button id="mode-rooms" class="btn btn-primary">Rooms</button>
+          <button id="mode-users" class="btn btn-outline-primary">Messages</button>
+        </div>
+        <h5 id="sidebar-title" class="offcanvas-title" id="offcanvasLabel">Rooms</h5>
         <button
           type="button"
-          class="btn-close"
+          class="btn-close d-lg-none"
           data-bs-dismiss="offcanvas"
           data-bs-target="#offcanvas"
           aria-label="Close"
         ></button>
       </div>
       <div class="offcanvas-body flex-column">
-        <nav id="rooms-list" class="nav flex-column w-100"></nav>
+        <nav id="sidebar-list" class="nav flex-column w-100"></nav>
         <button id="logout-btn" class="btn btn-outline-danger btn-sm m-4">
           Logout
         </button>
@@ -137,115 +77,5 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/scripts/client.js"></script>
-  <script>
-    let currentRoomId = null;
-
-    $(document).ready(function () {
-      if (!Client.isLoggedIn()) {
-        window.location.href = "/login.html";
-        return;
-      }
-
-      loadRooms();
-      setupMessageListener();
-
-      $("#logout-btn").click(function () {
-        Client.logout();
-      });
-
-      $("#message-form").submit(async function (e) {
-        e.preventDefault();
-        const message = $("#message-input").val().trim();
-        if (!message || !currentRoomId) return;
-
-        try {
-          await Client.emit("room:send", { roomId: currentRoomId, message });
-          $("#message-input").val("");
-        } catch (err) {
-          alert("Failed to send message: " + err.message);
-        }
-      });
-    });
-
-    async function loadRooms() {
-      try {
-        const roomsList = $("#rooms-list");
-        roomsList.empty();
-        const res = await Client.emit("room:list");
-        res.rooms.forEach((room) => {
-          const roomLink = $("<div>")
-            .addClass("room-link")
-            .text(room.name)
-            .attr("data-room-id", room._id)
-            .click(() => joinRoom(room._id, room.name));
-          roomsList.append(roomLink);
-        });
-      } catch (err) {
-        console.error("Failed to load rooms:", err);
-      }
-    }
-
-    async function joinRoom(roomId, roomName) {
-      if (currentRoomId === roomId) return;
-      if (currentRoomId) {
-        await Client.emit("room:leave", currentRoomId);
-      }
-
-      try {
-        const result = await Client.emit("room:join", roomId);
-        currentRoomId = roomId;
-
-        $(".room-link").removeClass("active");
-        $(`.room-link[data-room-id="${roomId}"]`).addClass("active");
-        $("#current-room-name").text(result.roomName);
-        $("#welcome-message").hide();
-        $("#chat-container").show();
-
-        displayMessages(result.messages);
-        $("#message-input").focus();
-      } catch (err) {
-        alert("Failed to join room: " + err.message);
-      }
-    }
-
-    function displayMessages(messages) {
-      const messagesArea = $("#messages-area");
-      messagesArea.empty();
-
-      messages.forEach((msg) => {
-        appendMessage(msg);
-      });
-
-      scrollToBottom();
-    }
-
-    function appendMessage(msg) {
-      const time = new Date(msg.dateSent).toLocaleTimeString();
-      const messageEl = $("<div>").addClass("message");
-      messageEl.html(`
-        <span class="sender">${escapeHtml(msg.user)}</span>
-        <span class="timestamp">${time}</span>
-        <div class="text">${escapeHtml(msg.message)}</div>
-      `);
-      $("#messages-area").append(messageEl);
-      scrollToBottom();
-    }
-
-    function setupMessageListener() {
-      Client.on("room:message", (msg) => {
-        appendMessage(msg);
-      });
-    }
-
-    function scrollToBottom() {
-      const messagesArea = document.getElementById("messages-area");
-      messagesArea.scrollTop = messagesArea.scrollHeight;
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement("div");
-      div.textContent = text;
-      return div.innerHTML;
-    }
-  </script>
+  <script src="/scripts/index.js"></script>
 </html>

@@ -88,6 +88,7 @@ export function registerAppChannel(io) {
         });
 
         const messageData = {
+          userId: socket.user.id,
           user: newMessage.user,
           message: newMessage.message,
           dateSent: newMessage.dateSent
@@ -102,8 +103,35 @@ export function registerAppChannel(io) {
       }
     });
 
-    socket.on('user:list', async(data, callback) => {
-    
+    socket.on('user:list', async (_, callback) => {
+      try {
+        const userId = socket.user.id;
+        const sent = await DirectMessage.distinct('targetId', { userId });
+        const received = await DirectMessage.distinct('userId', { targetId: userId });
+        const userIds = [...new Set([...sent.map(String), ...received.map(String)])];
+        const users = await User.find({ _id: { $in: userIds } }, 'username');
+        callback({ success: true, users });
+      } catch (err) {
+        callback({ error: err.message });
+      }
+    });
+
+    socket.on('user:join', async (targetId, callback) => {
+      try {
+        const messages = await DirectMessage.find({
+          $or: [
+            { userId: socket.user.id, targetId },
+            { userId: targetId, targetId: socket.user.id }
+          ]
+        }).sort({ dateSent: 1 }).lean();
+        const user = await User.findById(targetId);
+        if (!user) {
+          return callback({ error: 'User not found' });
+        }
+        callback({ success: true, targetId, username: user.username, messages });
+      } catch (err) {
+        callback({ error: err.message });
+      }
     })
 
     // Send a message directly to user
@@ -123,13 +151,16 @@ export function registerAppChannel(io) {
         });
 
         const messageData = {
+          userId: socket.user.id,
           user: newMessage.user,
           message: newMessage.message,
           dateSent: newMessage.dateSent
         };
 
         // Send to private user group
-        appChannel.to(`user:${user.id}}`).emit('user:message', messageData);
+        appChannel.to(`user:${user.id}`).emit('user:message', messageData);
+        // Also send to the sender so they see their own message
+        appChannel.to(`user:${socket.user.id}`).emit('user:message', messageData);
 
         callback({ success: true, message: messageData });
       } catch (err) {
