@@ -76,7 +76,7 @@ const Client = (() => {
     if (authSocket) authSocket.disconnect();
     localStorage.clear();
     window.location.href = '/login.html';
-  }  
+  }
 
   function emit(event, data) {
     return new Promise((resolve, reject) => {
@@ -101,6 +101,6 @@ const Client = (() => {
     logout,
     emit,
     on,
-    isLoggedIn,
+    isLoggedIn
   };
 })();

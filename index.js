@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import http from 'http';
 import { Server } from 'socket.io';
 import { registerAuthChannel } from './sockets/auth.js';
+import { registerAppChannel } from './sockets/app.js';
 
 import mongoose from "mongoose";
 import path from "path";
@@ -45,5 +46,6 @@ app.use('/scripts', express.static(__dirname + '/scripts'));
 
 // register socket channels
 registerAuthChannel(io);
+registerAppChannel(io);
 
 server.listen(3000, () => console.log(`Server running on http://localhost:3000`))
