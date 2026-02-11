@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    <link rel="stylesheet" href="/libs/bootstrap/css/bootstrap.min.css" />
+    <script src="/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/libs/jquery/jquery.min.js"></script>
+  </head>
+  <body class="bg-light">
+    <div class="container mt-5" style="max-width: 400px">
+      <h2 class="mb-4">Register</h2>
+      <div id="error" class="alert alert-danger d-none"></div>
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" id="username" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">First name</label>
+        <input type="text" id="firstname" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Last name</label>
+        <input type="text" id="lastname" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" id="password" class="form-control" />
+      </div>
+      <button id="registerBtn" class="btn btn-primary w-100 mb-3">
+        Register
+      </button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/client.js"></script>
+    <script>
+      if (Client.isLoggedIn()) {
+        window.location.href = "/";
+      }
+
+      document
+        .getElementById("registerBtn")
+        .addEventListener("click", async () => {
+          const username = $("#username").val();
+          const firstname = $("#firstname").val();
+          const lastname = $("#lastname").val();
+          const password = $("#password").val();
+          const errorEl = $("#error");
+          errorEl.addClass("d-none");
+
+          try {
+            await Client.register(username, password , firstname || null, lastname || null);
+            window.location.href = "/";
+          } catch (err) {
+            errorEl.text(err.message);
+            errorEl.removeClass("d-none");
+          }
+        });
+    </script>
+  </body>
+</html>

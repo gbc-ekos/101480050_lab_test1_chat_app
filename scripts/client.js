@@ -75,7 +75,7 @@ const Client = (() => {
     if (appSocket) appSocket.disconnect();
     if (authSocket) authSocket.disconnect();
     localStorage.clear();
-    window.location.href = '/index.html';
+    window.location.href = '/login.html';
   }  
 
   function emit(event, data) {

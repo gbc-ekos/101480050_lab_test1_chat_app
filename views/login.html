@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="/libs/bootstrap/css/bootstrap.min.css" />
+    <script src="/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/libs/jquery/jquery.min.js"></script>
+  </head>
+  <body class="bg-light">
+    <div class="container mt-5" style="max-width: 400px">
+      <h2 class="mb-4">Login</h2>
+      <div id="error" class="alert alert-danger d-none"></div>
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" id="username" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" id="password" class="form-control" />
+      </div>
+      <button id="loginBtn" class="btn btn-primary w-100 mb-3">Login</button>
+      <a href="/register.html" class="btn btn-secondary w-100">Register</a>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/client.js"></script>
+    <script>
+      if (Client.isLoggedIn()) {
+        window.location.href = "/";
+      }
+      $("#loginBtn").click(event, async () => {
+        const username = $("#username").val();
+        const password = $("#password").val();
+        const errorEl = $("#error");
+        errorEl.addClass("d-none");
+
+        try {
+          await Client.login(username, password);
+          window.location.href = "/";
+        } catch (err) {
+          errorEl.text(err.message);
+          errorEl.removeClass("d-none");
+        }
+      });
+    </script>
+  </body>
+</html>
