@@ -1,6 +1,8 @@
 import { verify } from '../auth/jwt.js';
 import Room from '../models/Room.js';
+import User from '../models/User.js';
 import RoomMessage from '../models/RoomMessage.js';
+import DirectMessage from '../models/DirectMessage.js';
 
 export function registerAppChannel(io) {
   const appChannel = io.of('/app');
@@ -19,6 +21,9 @@ export function registerAppChannel(io) {
 
   appChannel.on('connection', (socket) => {
     console.log(`${socket.user.username} connected`);
+
+    // users join their own private group to receive direct messages
+    socket.join(`user:${socket.user.id}`)
 
     socket.emit('profile', {
       username: socket.user.username
@@ -67,7 +72,7 @@ export function registerAppChannel(io) {
     });
 
     // Send a message to a room
-    socket.on('message:send', async ({ roomId, message }, callback) => {
+    socket.on('room:send', async ({ roomId, message }, callback) => {
       try {
         const room = await Room.findById(roomId);
         if (!room) {
@@ -90,6 +95,41 @@ export function registerAppChannel(io) {
 
         // Broadcast to all users in the room
         appChannel.to(roomId).emit('room:message', messageData);
+
+        callback({ success: true, message: messageData });
+      } catch (err) {
+        callback({ error: err.message });
+      }
+    });
+
+    socket.on('user:list', async(data, callback) => {
+    
+    })
+
+    // Send a message directly to user
+    socket.on('user:send', async ({ userId, message }, callback) => {
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return callback({ error: 'User not found' });
+        }
+
+        const newMessage = await DirectMessage.create({
+          userId: socket.user.id,
+          user: socket.user.username,
+          targetId: user.id,
+          target: user.username,
+          message
+        });
+
+        const messageData = {
+          user: newMessage.user,
+          message: newMessage.message,
+          dateSent: newMessage.dateSent
+        };
+
+        // Send to private user group
+        appChannel.to(`user:${user.id}}`).emit('user:message', messageData);
 
         callback({ success: true, message: messageData });
       } catch (err) {

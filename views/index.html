@@ -159,7 +159,7 @@
         if (!message || !currentRoomId) return;
 
         try {
-          await Client.emit("message:send", { roomId: currentRoomId, message });
+          await Client.emit("room:send", { roomId: currentRoomId, message });
           $("#message-input").val("");
         } catch (err) {
           alert("Failed to send message: " + err.message);
