@@ -1,0 +1,28 @@
+{
+  "name": "101480050_lab_test1_chat_app",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/gbc-ekos/101480050_lab_test1_chat_app#readme",
+  "bugs": {
+    "url": "https://github.com/gbc-ekos/101480050_lab_test1_chat_app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/gbc-ekos/101480050_lab_test1_chat_app.git"
+  },
+  "license": "ISC",
+  "author": "Eduard Kosenko",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "jquery": "^4.0.0",
+    "mongoose": "^9.2.0",
+    "socket.io": "^4.8.3"
+  }
+}
