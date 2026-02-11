@@ -8,8 +8,18 @@
     <link rel="stylesheet" href="/libs/bootstrap/css/bootstrap.min.css">
 <script src="/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="/libs/jquery/jquery.min.js"></script>
+<script>
+    let loginStatus = false;
+</script>
 </head>
 <body>
     Hello world!
 </body>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/scripts/client.js"></script>
+<script>
+    // Client.register('test', 'test1234', 'biba', 'boba').then(v => console.log(v)).catch(err => console.error(err));
+    Client.login('test', 'test1234').then(v => console.log(v)).catch(err => console.error(err))
+</script>
 </html>

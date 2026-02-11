@@ -1,9 +1,12 @@
 import express from "express";
 import dotenv from "dotenv";
+import http from 'http';
+import { Server } from 'socket.io';
+import { registerAuthChannel } from './sockets/auth.js';
+
 import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
-import User from "./models/User.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,8 +14,6 @@ const __dirname = path.dirname(__filename);
 dotenv.config({
   path: __dirname + "/.env",
 });
-
-console.log(process.env);
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -24,6 +25,8 @@ mongoose
   });
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 app.use(express.json());
 
 // setup libraries endpoints
@@ -36,10 +39,11 @@ app.use(
   express.static(__dirname + "/node_modules/jquery/dist"),
 );
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "home.html"));
-});
+// setup static
+app.use(express.static(__dirname + '/views'));
+app.use('/scripts', express.static(__dirname + '/scripts'));
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
-});
+// register socket channels
+registerAuthChannel(io);
+
+server.listen(3000, () => console.log(`Server running on http://localhost:3000`))

@@ -14,12 +14,22 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  dateCreated: {
+  firstname: {
+    type: String,
+    minLength: 2,
+    maxLength: 50,
+  },
+  lastName: {
+    type: String,
+    minLength: 2,
+    maxLength: 50,
+  },
+  createon: {
     type: Date,
     default: Date.now,
     immutable: true,
   },
-  dateUpdated: {
+  updateOn: {
     type: Date,
     default: Date.now,
   },
@@ -27,7 +37,7 @@ const UserSchema = new mongoose.Schema({
 
 // hashing password on save
 UserSchema.pre("save", async function () {
-  this.dateUpdated = new Date();
+  this.updateOn = new Date();
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
   }
@@ -35,7 +45,7 @@ UserSchema.pre("save", async function () {
 
 // Auto update da
 UserSchema.pre(["findOneAndUpdate", "updateOne", "updateMany"], function () {
-  this.set({ dateUpdated: new Date() });
+  this.set({ updateOn: new Date() });
 });
 
 // Utility to easily check password
