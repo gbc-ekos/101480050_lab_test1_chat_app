@@ -1,6 +1,7 @@
 let currentRoomId = null;
 let currentMode = "rooms";
 let currentUserId = null;
+let typingTimeout = null;
 
 $(function () {
   if (!Client.isLoggedIn()) {
@@ -32,6 +33,8 @@ $(function () {
       if (currentMode === "rooms" && currentRoomId) {
         await Client.emit("room:send", { roomId: currentRoomId, message });
       } else if (currentMode === "users" && currentUserId) {
+        clearTimeout(typingTimeout);
+        Client.emit("user:typing", { targetId: currentUserId, isTyping: false });
         await Client.emit("user:send", { userId: currentUserId, message });
       } else {
         return;
@@ -48,6 +51,16 @@ $(function () {
     if (userId) {
       switchMode("users");
       joinUserChat(userId, username);
+    }
+  });
+
+  $("#message-input").on("input", function () {
+    if (currentMode === "users" && currentUserId) {
+      Client.emit("user:typing", { targetId: currentUserId, isTyping: true });
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        Client.emit("user:typing", { targetId: currentUserId, isTyping: false });
+      }, 1000);
     }
   });
 });
@@ -200,6 +213,17 @@ function setupMessageListener() {
   Client.on("user:message", (msg) => {
     if (currentMode === "users" && currentUserId) {
       appendMessage(msg);
+    }
+  });
+
+  Client.on("user:typing", ({ userId, username, isTyping }) => {
+    if (currentMode === "users" && currentUserId === userId) {
+      if (isTyping) {
+        $("#typing-username").text(username);
+        $("#typing-indicator").show();
+      } else {
+        $("#typing-indicator").hide();
+      }
     }
   });
 }

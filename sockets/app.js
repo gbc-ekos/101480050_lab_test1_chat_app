@@ -168,6 +168,14 @@ export function registerAppChannel(io) {
       }
     });
 
+    socket.on('user:typing', ({ targetId, isTyping }) => {
+      appChannel.to(`user:${targetId}`).emit('user:typing', {
+        userId: socket.user.id,
+        username: socket.user.username,
+        isTyping
+      });
+    });
+
     socket.on('disconnect', () => {
       console.log(`${socket.user.username} disconnected`);
     });
